@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F411xE</Define>
               <Undefine></Undefine>
-              <IncludePath>        ..\..\..\..\LIB\STM32_Cryptographic\Inc;                                    ..\..\LIB\RFM69_C;                                    ..\..\LIB\BASE_IO;                                    ..\..\LIB\CRYPTO_CLASS;                                    ..\..\LIB\SSD1306;                                    ../Drivers/STM32F4xx_HAL_Driver/Inc;                                    ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                                    ../Middlewares/Third_Party/FreeRTOS/Source/include;                                    ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                                    ../Drivers/CMSIS/Include;                                    ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;                                    ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                                    ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;                                    ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;                           ../Core/Inc</IncludePath>
+              <IncludePath>        ..\..\..\..\LIB\STM32_Cryptographic\Inc;                                      ..\..\LIB\RFM69_C;                                      ..\..\LIB\BASE_IO;                                      ..\..\LIB\CRYPTO_CLASS;                                      ..\..\LIB\SSD1306;                                      ../Drivers/STM32F4xx_HAL_Driver/Inc;                                      ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                                      ../Middlewares/Third_Party/FreeRTOS/Source/include;                                      ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                                      ../Drivers/CMSIS/Include;                                      ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;                                      ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                                      ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;                                      ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;                             ../Core/Inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -951,16 +951,6 @@
               <FileName>RFM69_FreeRTOS.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\LIB\RFM69_C\RFM69_FreeRTOS.h</FilePath>
-            </File>
-            <File>
-              <FileName>RF69_ACK_FreeRTOS.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\LIB\RFM69_C\RF69_ACK_FreeRTOS.c</FilePath>
-            </File>
-            <File>
-              <FileName>RF69_ACK_FreeRTOS.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\LIB\RFM69_C\RF69_ACK_FreeRTOS.h</FilePath>
             </File>
           </Files>
         </Group>

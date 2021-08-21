@@ -121,7 +121,7 @@ const osThreadAttr_t RadioTask_attributes = {
   .cb_size = sizeof(RadioTaskControlBlock),
   .stack_mem = &RadioTaskBuffer[0],
   .stack_size = sizeof(RadioTaskBuffer),
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for TaskKey */
 osThreadId_t TaskKeyHandle;
@@ -152,7 +152,7 @@ const osThreadAttr_t TaskTIM_RF69_attributes = {
   .cb_size = sizeof(TaskTIM_RF69ControlBlock),
   .stack_mem = &TaskTIM_RF69Buffer[0],
   .stack_size = sizeof(TaskTIM_RF69Buffer),
-  .priority = (osPriority_t) osPriorityHigh1,
+  .priority = (osPriority_t) osPriorityRealtime1,
 };
 /* Definitions for TaskRF69_Recive */
 osThreadId_t TaskRF69_ReciveHandle;
@@ -164,18 +164,18 @@ const osThreadAttr_t TaskRF69_Recive_attributes = {
   .cb_size = sizeof(TaskRF69_ReciveControlBlock),
   .stack_mem = &TaskRF69_ReciveBuffer[0],
   .stack_size = sizeof(TaskRF69_ReciveBuffer),
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityNormal1,
 };
-/* Definitions for RF69_RxFlagQ */
-osMessageQueueId_t RF69_RxFlagQHandle;
-uint8_t RF69_RxFlagQBuffer[ 2 * sizeof( uint8_t ) ];
-osStaticMessageQDef_t RF69_RxFlagQControlBlock;
-const osMessageQueueAttr_t RF69_RxFlagQ_attributes = {
-  .name = "RF69_RxFlagQ",
-  .cb_mem = &RF69_RxFlagQControlBlock,
-  .cb_size = sizeof(RF69_RxFlagQControlBlock),
-  .mq_mem = &RF69_RxFlagQBuffer,
-  .mq_size = sizeof(RF69_RxFlagQBuffer)
+/* Definitions for QueueBufRxValid */
+osMessageQueueId_t QueueBufRxValidHandle;
+uint8_t QueueBufRxValidBuffer[ 1 * sizeof( uint8_t ) ];
+osStaticMessageQDef_t QueueBufRxValidControlBlock;
+const osMessageQueueAttr_t QueueBufRxValid_attributes = {
+  .name = "QueueBufRxValid",
+  .cb_mem = &QueueBufRxValidControlBlock,
+  .cb_size = sizeof(QueueBufRxValidControlBlock),
+  .mq_mem = &QueueBufRxValidBuffer,
+  .mq_size = sizeof(QueueBufRxValidBuffer)
 };
 /* Definitions for RF_Mutex */
 osMutexId_t RF_MutexHandle;
@@ -231,6 +231,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 /* Hook prototypes */
 void vApplicationIdleHook(void);
 void vApplicationTickHook(void);
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
 
 /* USER CODE BEGIN 2 */
 void vApplicationIdleHook( void )
@@ -257,6 +258,15 @@ void vApplicationTickHook( void )
    functions can be used (those that end in FromISR()). */
 }
 /* USER CODE END 3 */
+
+/* USER CODE BEGIN 4 */
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+{
+   /* Run time stack overflow checking is performed if
+   configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
+   called if a stack overflow is detected. */
+}
+/* USER CODE END 4 */
 
 /**
   * @brief  FreeRTOS initialization
@@ -297,8 +307,8 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the queue(s) */
-  /* creation of RF69_RxFlagQ */
-  RF69_RxFlagQHandle = osMessageQueueNew (2, sizeof(uint8_t), &RF69_RxFlagQ_attributes);
+  /* creation of QueueBufRxValid */
+  QueueBufRxValidHandle = osMessageQueueNew (1, sizeof(uint8_t), &QueueBufRxValid_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -622,7 +632,7 @@ void StartTaskKey(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StartDIO_RF69 */
-void StartDIO_RF69(void *argument)
+__weak void StartDIO_RF69(void *argument)
 {
   /* USER CODE BEGIN StartDIO_RF69 */
 	/* Infinite loop */

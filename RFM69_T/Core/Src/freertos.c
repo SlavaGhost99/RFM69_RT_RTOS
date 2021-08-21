@@ -71,7 +71,7 @@ volatile static uint32_t _good = 0;
 volatile static uint32_t _bad = 0;
 volatile static uint32_t _all = 0;
 volatile static float _percent = 0;
-volatile static uint16_t _DioPin = 0;
+//volatile static uint16_t _DioPin = 0;
 volatile static bool _BufferRX_Valid = false;
 /******************************************************************************/
 //extern bool _rxBufValid;
@@ -130,7 +130,7 @@ const osThreadAttr_t defaultTask_attributes = {
 osThreadId_t InitTaskHandle;
 const osThreadAttr_t InitTask_attributes = {
   .name = "InitTask",
-  .stack_size = 384 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for RadioTask */
@@ -143,7 +143,7 @@ const osThreadAttr_t RadioTask_attributes = {
   .cb_size = sizeof(RadioTaskControlBlock),
   .stack_mem = &RadioTaskBuffer[0],
   .stack_size = sizeof(RadioTaskBuffer),
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for TaskKey */
 osThreadId_t TaskKeyHandle;
@@ -174,7 +174,7 @@ const osThreadAttr_t TaskTIM_RF69_attributes = {
   .cb_size = sizeof(TaskTIM_RF69ControlBlock),
   .stack_mem = &TaskTIM_RF69Buffer[0],
   .stack_size = sizeof(TaskTIM_RF69Buffer),
-  .priority = (osPriority_t) osPriorityHigh1,
+  .priority = (osPriority_t) osPriorityRealtime1,
 };
 /* Definitions for TaskRF69_Recive */
 osThreadId_t TaskRF69_ReciveHandle;
@@ -186,18 +186,18 @@ const osThreadAttr_t TaskRF69_Recive_attributes = {
   .cb_size = sizeof(TaskRF69_ReciveControlBlock),
   .stack_mem = &TaskRF69_ReciveBuffer[0],
   .stack_size = sizeof(TaskRF69_ReciveBuffer),
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityNormal1,
 };
-/* Definitions for RF69_RxFlagQ */
-osMessageQueueId_t RF69_RxFlagQHandle;
-uint8_t RF69_RxFlagQBuffer[ 2 * sizeof( uint8_t ) ];
-osStaticMessageQDef_t RF69_RxFlagQControlBlock;
-const osMessageQueueAttr_t RF69_RxFlagQ_attributes = {
-  .name = "RF69_RxFlagQ",
-  .cb_mem = &RF69_RxFlagQControlBlock,
-  .cb_size = sizeof(RF69_RxFlagQControlBlock),
-  .mq_mem = &RF69_RxFlagQBuffer,
-  .mq_size = sizeof(RF69_RxFlagQBuffer)
+/* Definitions for QueueBufRxValid */
+osMessageQueueId_t QueueBufRxValidHandle;
+uint8_t QueueBufRxValidBuffer[ 1 * sizeof( uint8_t ) ];
+osStaticMessageQDef_t QueueBufRxValidControlBlock;
+const osMessageQueueAttr_t QueueBufRxValid_attributes = {
+  .name = "QueueBufRxValid",
+  .cb_mem = &QueueBufRxValidControlBlock,
+  .cb_size = sizeof(QueueBufRxValidControlBlock),
+  .mq_mem = &QueueBufRxValidBuffer,
+  .mq_size = sizeof(QueueBufRxValidBuffer)
 };
 /* Definitions for RF_Mutex */
 osMutexId_t RF_MutexHandle;
@@ -228,11 +228,6 @@ const osSemaphoreAttr_t SemTimer_RF69_attributes = {
   .cb_mem = &SemTimer_RF69ControlBlock,
   .cb_size = sizeof(SemTimer_RF69ControlBlock),
 };
-/* Definitions for SemReceiv_RF69 */
-osSemaphoreId_t SemReceiv_RF69Handle;
-const osSemaphoreAttr_t SemReceiv_RF69_attributes = {
-  .name = "SemReceiv_RF69"
-};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -250,36 +245,6 @@ void StartTaskTIM_RF69(void *argument);
 void StartTaskRF69_Recive(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
-
-/* Hook prototypes */
-void vApplicationIdleHook(void);
-void vApplicationTickHook(void);
-
-/* USER CODE BEGIN 2 */
-void vApplicationIdleHook( void )
-{
-   /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
-   to 1 in FreeRTOSConfig.h. It will be called on each iteration of the idle
-   task. It is essential that code added to this hook function never attempts
-   to block in any way (for example, call xQueueReceive() with a block time
-   specified, or call vTaskDelay()). If the application makes use of the
-   vTaskDelete() API function (as this demo application does) then it is also
-   important that vApplicationIdleHook() is permitted to return to its calling
-   function, because it is the responsibility of the idle task to clean up
-   memory allocated by the kernel to any task that has since been deleted. */
-}
-/* USER CODE END 2 */
-
-/* USER CODE BEGIN 3 */
-void vApplicationTickHook( void )
-{
-   /* This function will be called by each tick interrupt if
-   configUSE_TICK_HOOK is set to 1 in FreeRTOSConfig.h. User code can be
-   added here, but the tick hook is called from an interrupt context, so
-   code must not attempt to block, and only the interrupt safe FreeRTOS API
-   functions can be used (those that end in FromISR()). */
-}
-/* USER CODE END 3 */
 
 /**
   * @brief  FreeRTOS initialization
@@ -308,9 +273,6 @@ void MX_FREERTOS_Init(void) {
   /* creation of SemTimer_RF69 */
   SemTimer_RF69Handle = osSemaphoreNew(1, 1, &SemTimer_RF69_attributes);
 
-  /* creation of SemReceiv_RF69 */
-  SemReceiv_RF69Handle = osSemaphoreNew(1, 1, &SemReceiv_RF69_attributes);
-
   /* USER CODE BEGIN RTOS_SEMAPHORES */
 	/* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -320,8 +282,8 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the queue(s) */
-  /* creation of RF69_RxFlagQ */
-  RF69_RxFlagQHandle = osMessageQueueNew (2, sizeof(uint8_t), &RF69_RxFlagQ_attributes);
+  /* creation of QueueBufRxValid */
+  QueueBufRxValidHandle = osMessageQueueNew (1, sizeof(uint8_t), &QueueBufRxValid_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -619,7 +581,7 @@ void StartTaskTIM_RF69(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StartTaskRF69_Recive */
-void StartTaskRF69_Recive(void *argument)
+__weak void StartTaskRF69_Recive(void *argument)
 {
   /* USER CODE BEGIN StartTaskRF69_Recive */
   /* Infinite loop */
@@ -636,9 +598,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	static portBASE_TYPE xHigherPriorityTaskWoken;
 	xHigherPriorityTaskWoken = pdFALSE;
-/* Prevent unused argument(s) compilation warning */
+///* Prevent unused argument(s) compilation warning */
 
-	RF69_GPIO_EXTI_Callback(GPIO_Pin);
+	RF69_OS_GPIO_EXTI_Callback(GPIO_Pin);
 	if(GPIO_Pin == KEY_Pin)
 	{ 
 		xSemaphoreGiveFromISR(SemaphoreKEYHandle, &xHigherPriorityTaskWoken );
